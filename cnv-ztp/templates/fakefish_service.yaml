@@ -1,0 +1,29 @@
+{{ $count := (.Values.vm_number | int) }}
+{{ range until $count }}
+{{- $servicename := printf "fakefish-%s-%02d-%s" $.Values.vm_name . $.Values.vm_namespace -}}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ $servicename }}
+  namespace: {{ $.Values.vm_namespace }}
+  labels:
+    app: {{ $servicename }}
+    demo: ztp-cnv
+  annotations:
+    {{- if $.Values.metallb }}metallb.universe.tf/ip-allocated-from-pool: {{ $.Values.metallb_pool }}{{ end }}
+spec:
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+  internalTrafficPolicy: Cluster
+  type: {{- if $.Values.metallb }} LoadBalancer {{ else }} ClusterIP {{ end }}
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    app: {{ $servicename }}
+{{ end }}

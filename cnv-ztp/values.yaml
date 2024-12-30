@@ -1,0 +1,14 @@
+vm_name: "ztp-node"                                                     # Base VM name
+vm_namespace: "tom-vms"                                              # Namespace
+vm_number: 3                                                            # Number of VMs to create
+storageclass: "nfs-csi"                                      # StorageClass
+size_disk1: "120Gi"                                                     # Size of first disk
+size_disk2: "100Gi"                                                     # Size of second disk
+size_mem: "48Gi"                                                        # Memory size
+size_cpu: "10"                                                          # Number of CPU cores
+img_fakefish: "quay.io/bjozsa-redhat/fakefish-kubevirt:v4.17.6"         # Container image
+network: "default/br1-vlan110"                                          # NetworkAttachmentDefinition
+metallb: false
+metallb_pool: "stuff"
+odf: true
+kubeconfig: kubeconfig-ocp-virt-lab

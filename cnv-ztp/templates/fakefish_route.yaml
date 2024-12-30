@@ -1,0 +1,25 @@
+{{ $count := (.Values.vm_number | int) }}
+{{ range until $count }}
+{{- $routename := printf "fakefish-%s-%02d" $.Values.vm_name . -}}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ $routename }}
+  namespace: {{ $.Values.vm_namespace }}
+  annotations:
+    openshift.io/host.generated: 'true'
+  labels:
+    demo: ztp-cnv
+spec:
+  to:
+    kind: Service
+    name: {{ printf "fakefish-%s-%02d-%s" $.Values.vm_name . $.Values.vm_namespace }}
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
+{{ end }}

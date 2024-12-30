@@ -1,0 +1,59 @@
+{{ $count := (.Values.vm_number | int) }}
+{{ range until $count }}
+{{- $deployname := printf "%s-%02d-%s" $.Values.vm_name . $.Values.vm_namespace -}}
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: fakefish-{{ $deployname }}
+  namespace: {{ $.Values.vm_namespace }}
+  labels:
+    app: fakefish-{{ $deployname }}
+    demo: ztp-cnv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fakefish-{{ $deployname }}
+  template:
+    metadata:
+      labels:
+        app: fakefish-{{ $deployname }}
+    spec:
+      volumes:
+        - name: kubevirt-kubeconfig
+          secret:
+            secretName: fakefish-kubevirt-kubeconfig
+            defaultMode: 420
+      containers:
+        - name: fakefish
+          image: {{ $.Values.img_fakefish }}
+          args:
+            - '--remote-bmc'
+            - '{{- printf "%s-%02d_%s" $.Values.vm_name . $.Values.vm_namespace -}}'
+            - '--tls-mode'
+            - disabled
+          env:
+            - name: KUBECONFIG
+              value: /var/tmp/{{ $.Values.kubeconfig }}
+          resources: {}
+          volumeMounts:
+            - name: kubevirt-kubeconfig
+              readOnly: true
+              mountPath: /var/tmp/
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+{{ end }}

@@ -1,0 +1,9 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+Retrieve the names and MAC addresses for your VMs with the following oc command:
+oc get vm -ocustom-columns=NAME:.metadata.name,MAC:.spec.template.spec.domain.devices.interfaces[0].macAddress
+
+Retrieve the redfish hostnames for your VMs with the following oc command:
+oc get route

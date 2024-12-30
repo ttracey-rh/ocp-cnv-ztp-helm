@@ -1,0 +1,93 @@
+{{ $count := (.Values.vm_number | int) }}
+{{ range until $count }}
+{{- $vm_full_name := printf "%s-%02d" $.Values.vm_name .  -}}
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ $vm_full_name }}
+  namespace: {{ $.Values.vm_namespace }}
+  labels:
+    kubevirt.io/domain: {{ $vm_full_name }}
+    kubevirt.io/os: linux
+    demo: ztp-cnv
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: {{ $vm_full_name }}
+      spec:
+        preallocation: false
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: {{ $.Values.size_disk1 }}
+          storageClassName: {{ $.Values.storageclass }}
+{{- if $.Values.odf | default false }}
+    - metadata:
+        name: {{ $vm_full_name }}-odf
+      spec:
+        preallocation: false
+        source:
+          blank: {}
+        storage:
+          resources:
+            requests:
+              storage: {{ $.Values.size_disk2 }}
+          storageClassName: {{ $.Values.storageclass }}
+{{- end }}
+  running: false
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: fedora
+        vm.kubevirt.io/workload: server
+      labels:
+        kubevirt.io/domain: {{ $vm_full_name }}
+        kubevirt.io/size: small
+        network.kubevirt.io/headlessService: headless
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: {{ $.Values.size_cpu }}
+        devices:
+          autoattachPodInterface: false
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: rootdisk
+          interfaces:
+            - bridge: {}
+              model: virtio
+              name: {{ $vm_full_name }}-eth0
+          rng: {}
+        features:
+          acpi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: pc-q35-rhel9.4.0
+        memory:
+          guest: {{ $.Values.size_mem }}
+      networks:
+        - multus:
+            networkName: {{ $.Values.network }}
+          name: {{ $vm_full_name }}-eth0
+      terminationGracePeriodSeconds: 180
+      volumes:
+        - dataVolume:
+            name: {{ $vm_full_name }}
+          name: rootdisk
+{{- if $.Values.odf | default false }}
+        - dataVolume:
+            name: {{ $vm_full_name }}-odf
+          name: odf
+{{- end }}
+{{ end }}
