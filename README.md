@@ -32,7 +32,7 @@ helm install ztp-cnv . -f my-values.yaml
 
 5.  Retrieve the routes and MAC addresses for the fakefish pods and newly created VMs for creating your BMH resources
 ```
-oc get vm -ocustom-columns=NAME:.metadata.name,MAC:.spec.template.spec.domain.devices.interfaces[0].macAddress -n <vm namespace>
+oc get vm -o "custom-columns=NAME:.metadata.name,MAC:.spec.template.spec.domain.devices.interfaces[0].macAddress" -n <vm namespace>
 oc get route -n <vm namespace>
 ```
 
